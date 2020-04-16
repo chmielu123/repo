@@ -1,0 +1,73 @@
+AUTHTOKEN=$(curl --silent --insecure --data '{"username":"admin","password":"admin123"}' https://192.168.122.165/auth/login | jq --raw-output .auth_token)
+
+in toml
+[auth]
+  default_new_user_role = "restrictedcontrol"
+  backend = "ldap"
+  samlEnabled = false
+  samlLoginText = "Test AD"
+  scimEnabled = false
+  managedPasswordDisabled = false
+  managedPasswordFallbackUser = "admin"
+
+curl -X GET "https://192.168.122.165/api/ucp/config-toml" -H  "accept: application/toml" -k  -H  "Authorization: Bearer $AUTHTOKEN"
+curl -X PUT "https://192.168.122.165/api/ucp/config-toml" -H  "accept: application/toml" -k  -H  "Authorization: Bearer $AUTHTOKEN" --upload-file config-toml.json
+
+
+[root@dockeree ~]# cat ldap.config
+{
+  "serverURL": "ldap://ad.mch.local",
+  "noSimplePagination": false,
+  "startTLS": false,
+  "rootCerts": "",
+  "tlsSkipVerify": true,
+  "readerDN": "cn=Administrator,cn=Users,dc=mch,dc=local",
+  "readerPassword": "QWEqwe123",
+  "additionalDomains": [],
+  "userSearchConfigs": [
+   {
+    "baseDN": "cn=Users,dc=mch,dc=local",
+    "scopeSubtree": true,
+    "usernameAttr": "sAMAccountName",
+    "fullNameAttr": "displayName",
+    "filter": "",
+    "matchGroup": false,
+    "matchGroupDN": "",
+    "matchGroupMemberAttr": "",
+    "matchGroupIterate": false
+   }
+  ],
+  "adminSyncOpts": {
+   "enableSync": false,
+   "selectGroupMembers": false,
+   "groupDN": "",
+   "groupMemberAttr": "",
+   "searchBaseDN": "",
+   "searchScopeSubtree": false,
+   "searchFilter": ""
+  },
+  "syncSchedule": "@hourly",
+  "jitUserProvisioning": true
+ }
+
+curl -X GET "https://192.168.122.165/api/ucp/config/auth/ldap" -H  "Authorization: Bearer $AUTHTOKEN" -k
+curl -X PUT -H  "Authorization: Bearer $AUTHTOKEN" -k -H "Content-Type: application/json" -d @ldap.config "https://192.168.122.165/api/ucp/config/auth/ldap"
+
+
+mutual tls  i zwykły tls
+co to jest service mesh
+
+network policy
+
+k8s i cert manager
+VIP 
+stos TCP/IP  model OSI
+persistent volume, zapis z wielu miejsc jednocześnie VSAN -> vmware
+model uprawnień 
+vcenter
+
+
+pull request
+git merge git fork git 
+
+admin k8s ma dostęp do OSu
