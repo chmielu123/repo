@@ -1,0 +1,8 @@
+- hosts: firstmanager
+  gather_facts: yes
+  roles:
+    - deploy-metrics-for-standalone-prometheus
+
+- hosts: monitoring
+  roles:
+    - docker-monitoring-prometheus-standalone

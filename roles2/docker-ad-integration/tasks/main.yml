@@ -1,0 +1,81 @@
+#
+# https://docs.docker.com/ee/ucp/user-access/cli/#download-client-certificates
+#
+#
+#
+- name: get AUTHTOKEN
+  uri:
+    url: https://{{ ansible_default_ipv4.address }}/auth/login
+    body: "{\"username\":\"{{adminusername}}\",\"password\":\"{{adminpassword}}\"}"
+    body_format: json
+    method: POST
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+    validate_certs: no
+  register: token_raw
+  run_once: yes
+  delegate_to: "{{ groups['firstmanager'][0] }}"
+
+- name: parse https answer to get AUTHTOKEN
+  shell: "echo {{ token_raw }} | awk -F'[{ }]' '/uauth_token:/{print $26}' | cut -c 2- "
+  register: token_to_https
+
+- name: get current config toml file
+  uri:
+    url: https://{{ ansible_default_ipv4.address }}/api/ucp/config-toml
+    method: GET
+    headers:
+      Authorization: "Bearer {{ token_to_https.stdout_lines[0] }}"
+      accept: application/toml
+    validate_certs: no
+    dest: $PWD/config-toml 
+#
+# modify toml file
+#
+#
+#
+- name: modify toml config step 1
+  lineinfile:
+    path: $PWD/config-toml
+    regexp: 'backend ='
+    line: 'backend = "ldap"'
+ 
+- name: modify toml config step 2
+  lineinfile:
+    path: $PWD/config-toml
+    regexp: 'samlLoginText ='
+    line: 'samlLoginText = "Test AD"'
+
+- name: modify toml config step 3
+  lineinfile:
+    path: $PWD/config-toml
+    regexp: 'gedPasswordFallbackUser ='
+    line: 'managedPasswordFallbackUser = "admin"'
+
+
+- name: put new config toml file
+  uri:
+    url: https://{{ ansible_default_ipv4.address }}/api/ucp/config-toml
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ token_to_https.stdout_lines[0] }}"
+      accept: application/toml
+    validate_certs: "no"
+    src: $PWD/config-toml 
+    remote_src: "yes"
+
+- name: cleaning 
+  file:
+    path: $PWD/config-toml
+    state: absent
+    
+- name: put ldap config to docker
+  uri:
+    url: https://{{ ansible_default_ipv4.address }}/api/ucp/config/auth/ldap
+    method: PUT
+    headers:
+      Authorization: "Bearer {{ token_to_https.stdout_lines[0] }}"
+      Content-Type: application/json
+    validate_certs: "no"
+    body: "{{ lookup('file','ldap.config') }}"
+    body_format: json

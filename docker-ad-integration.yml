@@ -1,0 +1,4 @@
+- hosts: firstmanager
+  become: yes
+  roles:
+    - docker-ad-integration

@@ -1,0 +1,62 @@
+- name: install docker
+  yum:
+    name: docker
+    state: present
+  ignore_errors: yes
+
+- name: install epel 
+  yum:
+    name: epel-release
+    state: present
+
+- name: install docker-compose package
+  yum:
+    name: docker-compose
+    state: latest
+
+- name: create prometheus service systemd file with docker-compose
+  copy: 
+    src: files/docker-compose-application-service
+    dest: /etc/systemd/system/docker-compose-prometheus.service
+
+- name: reload systemd
+  systemd:
+    daemon_reload: "yes"
+
+- name: create directory for prometheus
+  file:
+    path: /srv/prometheus
+    state: directory
+
+- name: copy docker-compose file for prometheus
+  copy:
+    src: files/docker-compose.yml
+    dest: /srv/prometheus/docker-compose.yml
+
+- name: copy config file for prometheus
+  copy:
+    src: files/prometheus.yml
+    dest: /srv/prometheus/prometheus.yml
+
+- name: get prometheus serviceaccount token
+  shell: kubectl get secret $(kubectl get secrets -n logging-metrics | grep prom-reader | awk '{print $1}') -o yaml -n logging-metrics  | grep " token" | awk '{ print $2 }' | base64 --decode
+  delegate_to: "{{ groups['firstmanager'][0] }}"
+  register: token
+
+- name: insert token to prometheus config file
+  replace:
+    path: /srv/prometheus/prometheus.yml
+    regexp: 'GIVE_ME_A_TOKEN'
+    replace: "{{ token.stdout_lines[0] }}"
+
+- name: insert API IP address to prometheus config file
+  replace:
+    path: /srv/prometheus/prometheus.yml
+    regexp: 'GIVE_ME_API_IP'
+    replace: "{{ hostvars[groups['firstmanager'][0]].ansible_default_ipv4.address }}"
+
+- name: enable and start prometheus service
+  systemd:
+    name: docker-compose-prometheus
+    state: started
+    enabled: "yes"

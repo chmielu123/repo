@@ -9,6 +9,12 @@ in toml
   scimEnabled = false
   managedPasswordDisabled = false
   managedPasswordFallbackUser = "admin"
+  
+  
+  backend = "managed"
+  samlLoginText = ""
+  managedPasswordFallbackUser = ""
+  
 
 curl -X GET "https://192.168.122.165/api/ucp/config-toml" -H  "accept: application/toml" -k  -H  "Authorization: Bearer $AUTHTOKEN"
 curl -X PUT "https://192.168.122.165/api/ucp/config-toml" -H  "accept: application/toml" -k  -H  "Authorization: Bearer $AUTHTOKEN" --upload-file config-toml.json
@@ -58,7 +64,7 @@ mutual tls  i zwykły tls
 co to jest service mesh
 
 network policy
-
+-
 k8s i cert manager
 VIP 
 stos TCP/IP  model OSI

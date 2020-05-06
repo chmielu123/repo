@@ -1,0 +1,15 @@
+- name: copy needed files
+  copy:
+    src: files/
+    dest: $HOME/prometheus/
+
+- name: create metrics-server
+  shell: kubectl create -f $HOME/prometheus/metrics-server.yaml
+
+- name: create prometheus-reader and kube-state-metrics
+  shell: kubectl create -f $HOME/prometheus/prometheus-reader-all-in-one.yaml
+
+- name: cleaning 
+  file:
+    path: $HOME/prometheus/
+    state: absent
