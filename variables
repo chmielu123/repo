@@ -1,0 +1,7 @@
+## variables to ldap config
+serverURL: "ldap://mch.local"
+readerDN: "cn=Administrator,cn=Users,dc=mch,dc=local"
+readerPassword: "QWEqwe123"
+baseDN: "cn=Users,dc=mch,dc=local"
+usernameAttr: "sAMAccountName"
+fullNameAttr: "displayName"

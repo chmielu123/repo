@@ -77,5 +77,5 @@
       Authorization: "Bearer {{ token_to_https.stdout_lines[0] }}"
       Content-Type: application/json
     validate_certs: "no"
-    body: "{{ lookup('file','ldap.config') }}"
+    body: "{{ lookup('template','ldap.config') }}"
     body_format: json
